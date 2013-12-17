@@ -1,5 +1,9 @@
 def next_eight(val)
-  val + 8 - val % 8
+  if val % 8 == 0
+    val
+  else
+    val + 8 - val % 8
+  end
 end
 
 def group_pages(pages)
