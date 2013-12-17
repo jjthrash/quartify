@@ -29,7 +29,7 @@ def layout_quarto(pages)
   }
 end
 
-def pages_for_count(count)
+def layouts_for_page_count(count)
   upped = next_eight(count)
   group_pages((0...upped).to_a).map {|quarto_pages|
     layout_quarto(quarto_pages)
@@ -44,7 +44,7 @@ def ensure_rotation(quarto_layouts)
       if orientation == :d
         fn = "out-#{page_number}.png"
         if File.exist?(fn)
-          system("convert -rotate 180 #{fn} #{fn}")
+          system("mogrify -rotate 180 #{fn}")
         end
       end
     end
@@ -79,27 +79,34 @@ def assemble_pdf(quarto_layouts)
   system("convert -density #{DENSITY}x#{DENSITY} -units pixelsperinch #{files.join(' ')} out.pdf")
 end
 
-def quartify(relative_path)
-  path = File.expand_path(relative_path)
+def pdfnup
+  system("pdfnup --nup 2x2 --no-landscape out.pdf")
+end
+
+def split_pdfs(path)
+  system("convert -density #{DENSITY}x#{DENSITY} -units pixelsperinch #{path} out.png")
+end
+
+def reset_tmp
   system("rm -rf tmp")
   Dir.mkdir('tmp')
+end
+
+def get_page_count
+  Dir.glob("out*.png").count
+end
+
+def quartify(relative_path)
+  path = File.expand_path(relative_path)
+  reset_tmp
   Dir.chdir('tmp') do
-    system("rm -rf *")
-    system("convert -density #{DENSITY}x#{DENSITY} -units pixelsperinch #{path} out.png")
-    page_count = Dir.glob("out*.png").count
-    quarto_layouts = pages_for_count(page_count)
+    split_pdfs(path)
+    quarto_layouts = layouts_for_page_count(get_page_count)
     ensure_rotation(quarto_layouts)
     create_blanks(quarto_layouts)
     assemble_pdf(quarto_layouts)
-
-    system("pdfnup --nup 2x2 --no-landscape out.pdf")
+    pdfnup
   end
-  # convert to PNG
-  # calculate page count
-  # generate quarto page count
-  # rotate appropriate images
-  # reassemble PDF
-  # pdfnup??
 end
 
 if __FILE__ == $0
