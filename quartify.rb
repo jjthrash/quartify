@@ -80,7 +80,7 @@ def assemble_pdf(quarto_layouts)
 end
 
 def pdfnup
-  system("pdfnup --nup 2x2 --no-landscape out.pdf")
+  system("pdfnup --nup 2x2 --paper letter --no-landscape out.pdf")
 end
 
 def split_pdfs(path)
